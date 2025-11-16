@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ocelote's image to bif converter</title>
+<style>
+
+body {
+	font-family: monospace;
+	background-color: #222222;
+	padding: 1%
+}
+#imgc {
+	height: 600px;
+	width: 600px;
+	image-rendering: pixelated;
+	border-width: 4px;
+	border-color: #f80;
+	border-style: solid;
+}
+#imgUpload {
+	color: #f80;
+	width: auto;
+	margin: 0 auto;
+	font-size: 2em;
+	font-family: monospace;
+
+}
+#imgUpload::file-selector-button {
+	background-color: #f80;
+	color: white;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 16px;
+	width: 200px;
+	height: 100px;
+	text-align: center;
+	font-size: 1em;
+	transition: background-color 0.3s ease
+	font-family: monospace;
+}
+#output {
+	text-wrap: pretty;
+	overflow-wrap: break-word;
+	word-break: break-all;
+	color: #f80;
+	border-width: 4px;
+	border-color: #f80;
+	border-style: solid;
+	border-radius: 5px;
+	background-color: #111;
+
+}
+button {
+	background-color: #f80;
+	color: white;
+	font-family: monospace;
+	height: 100px;
+	width: 200px;
+	font-size: 2em;
+	border-radius: 20px;
+	cursor: pointer;
+}
+#copyWC {
+	width:350px;
+	background-color:#9b39d5;
+}
+#pasteArea {
+	width: 200px;
+	border:5px dashed #f80;
+	padding: 20px;
+	text-align: center;
+	border-radius: 50px;
+	color: #f80;
+}
+h1 {
+	color: #f80;
+	font-size: 3em;
+}
+h2 {
+	color: #fa3;
+	font-size: 2em;
+}
+#isHori {
+	width:40px;
+	height:40px;
+	accent-color: #9b39d5;
+	vertical-align: middle;
+	cursor: pointer;
+}
+#isHoriText {
+	color: #9b39d5;
+	font-size: 2em;
+	vertical-align: middle;
+}
+#isHoriBlock {
+	display: inline-block;
+	vertical-align: middle;
+}
+#buttons {
+	padding: 20px;
+	border-radius: 20px;
+	background-color: #333;
+	vertical-align: middle;
+	width: 800px;
+}
+li {
+	color: #f80;
+}
+ul {
+	line-height: 1.5em;
+}
+</style>
+</head>
+<body>
+<script>
+//ctb by Ocelote, licensable under MIT license
+ctb=a=>{return[["A",[55,58,62]],["B",[125,125,115]],["C",[9,11,16]],["D",[45,48,144]],["E",[97,60,32]],["F",[21,119,135]],["G",[37,138,200]],["H",[95,170,25]],["I",[169,48,159]],["J",[225,98,1]],["K",[215,102,143]],["L",[101,32,157]],["M",[144,33,33]],["N",[208,214,215]],["O",[73,91,36]],["P",[242,176,21]],["Q",[58,42,36]],["R",[135,107,98]],["S",[36,21,15]],["T",[73,60,91]],["U",[77,50,35]],["V",[85,90,90]],["W",[112,109,138]],["X",[103,117,53]],["Y",[149,87,108]],["Z",[163,83,38]],["a",[163,78,79]],["b",[118,70,86]],["c",[143,61,47]],["d",[210,177,161]],["e",[75,82,40]],["f",[187,134,36]],["g",[111,128,138]],["h",[182,206,204]],["i",[43,57,67]],["j",[132,167,222]],["k",[182,164,151]],["l",[172,219,210]],["m",[160,197,231]],["n",[172,211,149]],["o",[230,163,224]],["p",[243,160,133]],["q",[248,173,198]],["r",[192,155,200]],["s",[243,133,135]],["t",[225,247,248]],["u",[158,179,147]],["v",[253,245,180]]].reduce((_,e)=>{let l=e[1][0]-a[0],C=e[1][1]-a[1],r=e[1][2]-a[2],k=l*l+C*C+r*r;return k>_[2]?_:[e[0],e[1],k]},[,,2e5])[0]}
+cmap = {A:[55,58,62],B:[125,125,115],C:[9,11,16],D:[45,48,144],E:[97,60,32],F:[21,119,135],G:[37,138,200],H:[95,170,25],I:[169,48,159],J:[225,98,1],K:[215,102,143],L:[101,32,157],M:[144,33,33],N:[208,214,215],O:[73,91,36],P:[242,176,21],Q:[58,42,36],R:[135,107,98],S:[36,21,15],T:[73,60,91],U:[77,50,35],V:[85,90,90],W:[112,109,138],X:[103,117,53],Y:[149,87,108],Z:[163,83,38],a:[163,78,79],b:[118,70,86],c:[143,61,47],d:[210,177,161],e:[75,82,40],f:[187,134,36],g:[111,128,138],h:[182,206,204],i:[43,57,67],j:[132,167,222],k:[182,164,151],l:[172,219,210],m:[160,197,231],n:[172,211,149],o:[230,163,224],p:[243,160,133],q:[248,173,198],r:[192,155,200],s:[243,133,135],t:[225,247,248],u:[158,179,147],v:[253,245,180]}
+let WCstart = `bifData = ""
+tokenData = []
+blockData = []
+queuePos = -1
+building = null
+buildOrigin = [0,0,0]
+currentToken = ""
+letterPos = 0
+currentBlock = "t"
+tokenPos = 0
+bmap={A:"Gray Concrete",B:"Light Gray Concrete",C:"Black Concrete",D:"Blue Concrete",E:"Brown Concrete",F:"Cyan Concrete",G:"Light Blue Concrete",H:"Lime Concrete",I:"Magenta Concrete",J:"Orange Concrete",K:"Pink Concrete",L:"Purple Concrete",M:"Red Concrete",N:"White Concrete",O:"Green Concrete",P:"Yellow Concrete",Q:"Gray Baked Clay",R:"Light Gray Baked Clay",S:"Black Baked Clay",T:"Blue Baked Clay",U:"Brown Baked Clay",V:"Cyan Baked Clay",W:"Light Blue Baked Clay",X:"Lime Baked Clay",Y:"Magenta Baked Clay",Z:"Orange Baked Clay",a:"Pink Baked Clay",b:"Purple Baked Clay",c:"Red Baked Clay",d:"White Baked Clay",e:"Green Baked Clay",f:"Yellow Baked Clay",g:"Gray Chalk",h:"Light Gray Chalk",i:"Black Chalk",j:"Blue Chalk",k:"Brown Chalk",l:"Cyan Chalk",m:"Light Blue Chalk",n:"Lime Chalk",o:"Magenta Chalk",p:"Orange Chalk",q:"Pink Chalk",r:"Purple Chalk",s:"Red Chalk",t:"White Chalk",u:"Green Chalk",v:"Yellow Chalk"}
+drawImage = ([bx,by,bz],bif) => {
+bifData = bif
+buildOrigin = [bx+1,by+1,bz+97]
+queuePos = 0
+tokenData = []
+blockData = []
+building = null
+currentToken = ""
+currentBlock = "t"
+letterPos = 0
+tokenPos = 0
+}
+tick = () => {
+if(queuePos<0)return
+if(!building){
+if(building===false){
+while(true){
+if(queuePos>9215){
+queuePos=0
+building=true
+return
+}
+let token = tokenData[tokenPos]
+let letter = token[0]
+let repeat = +(token.slice(1)||"1")
+blockData[queuePos] = letter
+queuePos+=repeat
+tokenPos++
+}
+} else {
+while(true){
+if(letterPos>bifData.length){
+building = false
+return
+}
+let currentLetter = bifData[letterPos]
+if(isNaN(+currentLetter)){
+currentToken && (tokenData.push(currentToken))
+currentToken = ""
+}
+currentToken += currentLetter
+letterPos++
+}
+}
+}
+while(true){
+if(queuePos>9215){
+queuePos=-1
+return
+}
+let blockPos = [buildOrigin[0]+(queuePos%96),buildOrigin[1],buildOrigin[2]-((queuePos/96)>>0)]
+if(blockData[queuePos])currentBlock=blockData[queuePos]
+api.setBlock(blockPos,bmap[currentBlock])
+queuePos++
+}
+}
+
+drawImage([0,0,0]/*modify these coordinates to render image in a different spot*/,"`
+WCstartVert = `bifData = ""
+tokenData = []
+blockData = []
+queuePos = -1
+building = null
+buildOrigin = [0,0,0]
+currentToken = ""
+letterPos = 0
+currentBlock = "t"
+tokenPos = 0
+bmap={A:"Gray Concrete",B:"Light Gray Concrete",C:"Black Concrete",D:"Blue Concrete",E:"Brown Concrete",F:"Cyan Concrete",G:"Light Blue Concrete",H:"Lime Concrete",I:"Magenta Concrete",J:"Orange Concrete",K:"Pink Concrete",L:"Purple Concrete",M:"Red Concrete",N:"White Concrete",O:"Green Concrete",P:"Yellow Concrete",Q:"Gray Baked Clay",R:"Light Gray Baked Clay",S:"Black Baked Clay",T:"Blue Baked Clay",U:"Brown Baked Clay",V:"Cyan Baked Clay",W:"Light Blue Baked Clay",X:"Lime Baked Clay",Y:"Magenta Baked Clay",Z:"Orange Baked Clay",a:"Pink Baked Clay",b:"Purple Baked Clay",c:"Red Baked Clay",d:"White Baked Clay",e:"Green Baked Clay",f:"Yellow Baked Clay",g:"Gray Chalk",h:"Light Gray Chalk",i:"Black Chalk",j:"Blue Chalk",k:"Brown Chalk",l:"Cyan Chalk",m:"Light Blue Chalk",n:"Lime Chalk",o:"Magenta Chalk",p:"Orange Chalk",q:"Pink Chalk",r:"Purple Chalk",s:"Red Chalk",t:"White Chalk",u:"Green Chalk",v:"Yellow Chalk"}
+drawImage = ([bx,by,bz],bif) => {
+bifData = bif
+buildOrigin = [bx+97,by+97,bz+97]
+queuePos = 0
+tokenData = []
+blockData = []
+building = null
+currentToken = ""
+currentBlock = "t"
+letterPos = 0
+tokenPos = 0
+}
+tick = () => {
+if(queuePos<0)return
+if(!building){
+if(building===false){
+while(true){
+if(queuePos>9215){
+queuePos=0
+building=true
+return
+}
+let token = tokenData[tokenPos]
+let letter = token[0]
+let repeat = +(token.slice(1)||"1")
+blockData[queuePos] = letter
+queuePos+=repeat
+tokenPos++
+}
+} else {
+while(true){
+if(letterPos>bifData.length){
+building = false
+return
+}
+let currentLetter = bifData[letterPos]
+if(isNaN(+currentLetter)){
+currentToken && (tokenData.push(currentToken))
+currentToken = ""
+}
+currentToken += currentLetter
+letterPos++
+}
+}
+}
+while(true){
+if(queuePos>9215){
+queuePos=-1
+return
+}
+let blockPos = [buildOrigin[0],buildOrigin[1]-((queuePos/96)>>0),buildOrigin[2]-(queuePos%96)]
+if(blockData[queuePos])currentBlock=blockData[queuePos]
+api.setBlock(blockPos,bmap[currentBlock])
+queuePos++
+}
+}
+
+drawImage([0,0,0]/*modify these coordinates to render image in a different spot*/,"`
+function copyOutput() {
+navigator.clipboard.writeText(document.getElementById("output").value)
+let copyButton = document.getElementById("copyButton")
+copyButton.textContent = "Copied bif!"
+setTimeout(()=>copyButton.textContent="Copy bif",1500)
+}
+function copyWC() {
+navigator.clipboard.writeText((document.getElementById("isHori").checked?WCstart:WCstartVert)+document.getElementById("output").value+'")')
+let copyButton = document.getElementById("copyWC")
+copyButton.textContent = "Copied as World Code!"
+setTimeout(()=>copyButton.textContent="Copy as World Code",1500)
+}
+
+</script>
+<h1>Ocelote's image to <abbr title="Bloxd Image Format">bif</abbr> converter</h1>
+<h2>Image Upload</h2>
+<input type="file" id="imgUpload" accept="image/*"/>
+<br/>
+<br/>
+<div id="pasteArea">...Or copy/paste an image</div>
+<br/>
+<br/>
+<h2>In-game Image Preview</h2>
+<canvas id="imgc" width=96 height=96></canvas>
+<br/>
+<br/>
+<h2>Output bif code</h2>
+<textarea readonly id="output" name="bif code" rows="20" cols="80"></textarea>
+<br/>
+<br/>
+<h2>Copy Options</h2>
+<div id = "buttons">
+<button id="copyButton" onclick="copyOutput()">Copy bif</button>
+<button id="copyWC" onclick="copyWC()">Copy as World Code</button>
+<div id="isHoriBlock">
+    <input type="checkbox" id="isHori" name="Horizontal" checked/>
+    <label id="isHoriText" for="isHori">Horizontal</label>
+</div>
+</div>
+<h2>Brief Instructions</h2>
+<ul>
+<li>Paste an image here and copy it as world code</li>
+<li>Put the world code in a flat test world</li>
+<li>Wait for it to load then save it as a schematic</li>
+<li>Paste it in the world where you want it to be</li>
+</ul>
+<h2>Detailed Instructions</h2>
+<ul>
+<li>Choose an image or paste one here</li>
+<li>Select whether you want it to be horizontal</li>
+<li>Click "Copy As World Code"</li>
+<li>Make a new flat world and paste world code there</li>
+<li>Type "/gm c" in chat (without quotes)</li>
+<li>Type "//wand" in chat (without quotes)</li>
+<li>Wait for the image to finish loading</li>
+<li>Select the two corners of the image</li>
+<li>Type "//copy" in chat (without quotes)</li>
+<li>Optional: Type "//rotate" in chat (without quotes) to rotate the image you copied</li>
+<li>Type "//schematic save" in chat (without quotes) to save the image as a schematic</li>
+<li>Join the world where you want the image to be</li>
+<li>Move far away from any structures you have built</li>
+<li>Type "//schematic load" in chat (without quotes) and select the schematic you just saved</li>
+<li>Type "//paste" in chat (without quotes)</li>
+<li>Type "//wand" in chat (without quotes)</li>
+<li>Select the two corners of the image</li>
+<li>Go to the bottom left corner of the pasted image, in the front, then don't move</li>
+<li>Type "//copy" in chat (without quotes)</li>
+<li>Go in the bottom left corner in the front of where you want to paste the image and don't move</li>
+<li>Type "//paste" in chat (without quotes)</li>
+<li>Your image has been successfully pasted</li>
+</ul>
+
+<script>
+let canvas = document.getElementById("imgc");
+let ctx = canvas.getContext('2d');
+imgUpload = document.getElementById("imgUpload")
+imgUpload.addEventListener("change",e=>{
+let files = e.target.files
+if(files.length){
+file = files[0]
+const reader = new FileReader()
+reader.onload = (e) => {
+const img = new Image()
+
+img.onload = () => {
+let [imgw,imgh] = [img.naturalWidth,img.naturalHeight]
+let hIsBigger = imgh>imgw
+let realh = hIsBigger?canvas.height:canvas.width*imgh/imgw
+let realw = hIsBigger?canvas.height*imgw/imgh:canvas.width
+ctx.clearRect(0, 0, canvas.width, canvas.height)
+ctx.drawImage(img, (canvas.width-realw)/2, (canvas.height-realh)/2, realw, realh)
+let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+let pxData = imgData.data
+let base48arr = []
+for(let i = 0; i < pxData.length; i+=4){
+if(pxData[i+3]<128){
+[pxData[i], pxData[i+1], pxData[i+2], pxData[i+3]] = [225,247,248,255]
+base48arr.push('t')
+} else {
+pxData[i+3] = 255
+let bColor = ctb([pxData[i],pxData[i+1],pxData[i+2]])
+let [r,g,b] = cmap[bColor]
+pxData[i] = r
+pxData[i+1] = g
+pxData[i+2] = b
+base48arr.push(bColor)
+}
+}
+let outputPar = document.getElementById('output')
+let rleArr = []
+let prevL = 'z'
+let prevC = 0
+for(l of base48arr){
+if(l === prevL){
+prevC++
+} else {
+rleArr.push(prevL+(prevC-1?prevC:''))
+prevC = 1
+prevL = l
+}
+}
+rleArr.push(prevL+(prevC-1?prevC:''))
+rleArr[0]=''
+outputPar.value = rleArr.join('')
+ctx.putImageData(imgData, 0, 0)
+}
+img.src = e.target.result
+}
+
+reader.readAsDataURL(file)
+}
+})
+document.addEventListener('paste', event=>{
+event.preventDefault()
+let items = (event.clipboardData||event.originalEvent.clipboardData).items
+let imageFile = null
+for (let item of items) {
+if (item.type.includes('image')) {
+imgFile = item.getAsFile()
+break;
+}
+}
+if (imgFile) {
+let dt = new DataTransfer()
+dt.items.add(imgFile)
+document.getElementById('imgUpload').files = dt.files
+document.getElementById('imgUpload').dispatchEvent(new Event('change', { bubbles: true }))
+}
+})
+</script>
+</body>
+</html>
