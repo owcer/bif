@@ -82,6 +82,9 @@ h2 {
 	color: #fa3;
 	font-size: 2em;
 }
+.warning {
+	color: #f00
+}
 #isHori {
 	width:40px;
 	height:40px;
@@ -327,7 +330,11 @@ setTimeout(()=>copyButton.textContent="Copy as World Code",1500)
 <li>Type "//paste" in chat (without quotes)</li>
 <li>Your image has been successfully pasted</li>
 </ul>
-
+<h2 class="warning">
+WARNING: DO NOT use images that violate Bloxd's rules.<br/>
+Violating the rules WILL result in a permanent ban,<br/>
+and you may end up in court or even jail for it.
+</h2>
 <script>
 let canvas = document.getElementById("imgc");
 let ctx = canvas.getContext('2d');
