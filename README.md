@@ -1,2 +1,2 @@
 # bif
-Easily render any image into bloxd
+Easily render any image into bloxd.
