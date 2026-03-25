@@ -96,15 +96,17 @@ function checkClamp(e){let s=e.previousElementSibling;if(s&&s.type==='range'){le
 <div id="options">
 <div class="opt-grid">
 <div class="opt-group"><div class="opt-label">Load Position (x, y, z)</div><div class="opt-row"><span>X:</span><input type="number" id="inX" value="0" oninput="updateConfig()"><span>Y:</span><input type="number" id="inY" value="0" oninput="updateConfig()"><span>Z:</span><input type="number" id="inZ" value="0" oninput="updateConfig()"></div></div>
-<div class="opt-group"><div class="opt-label">Resolution</div><div class="opt-row"><span>Max Size:</span><input type="range" min="1" max="640" value="96" oninput="sync(this,0)"><input type="number" id="resNum" value="96" oninput="sync(this,1)" onblur="checkClamp(this)"></div><p id="finalsize"><strong>Final size:</strong><br>Waiting for input...</p></div>
+<div class="opt-group"><div class="opt-label">Resolution</div><div class="opt-row"><span>Max Size:</span><input type="range" min="1" max="640" id="resSlider" value="96" oninput="sync(this,0)"><input type="number" id="resNum" value="96" oninput="sync(this,1)" onblur="checkClamp(this)"></div><p id="finalsize"><strong>Final size:</strong><br>Waiting for input...</p></div>
 </div>
 <div class="opt-group"><div class="opt-label">Crop (0-100%)</div><div class="opt-grid">
 <div class="opt-row"><span>Top:</span><input type="range" min="0" max="100" value="0" step="0.1" id="cropT" oninput="sync(this,0)"><input type="number" value="0" step="0.1" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
 <div class="opt-row"><span>Left:</span><input type="range" min="0" max="100" value="0" step="0.1" id="cropL" oninput="sync(this,0)"><input type="number" value="0" step="0.1" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
 <div class="opt-row"><span>Right:</span><input type="range" min="0" max="100" value="0" step="0.1" id="cropR" oninput="sync(this,0)"><input type="number" value="0" step="0.1" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
 <div class="opt-row"><span>Bottom:</span><input type="range" min="0" max="100" value="0" step="0.1" id="cropB" oninput="sync(this,0)"><input type="number" value="0" step="0.1" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
-</div></div>
-<div class="opt-group"><div class="opt-label">Main Settings</div>
+</div>
+<button style="margin: 0 auto" onclick="resetCrop();updateConfig()">Reset Crop</button>
+</div>
+<div class="opt-group"><div class="opt-label">Render Settings</div>
 <div class="opt-row"><label for="checkAir">Use Air for Transparent:</label><input type="checkbox" id="checkAir" oninput="updateConfig()"></div>
 <div class="opt-row"><label for="checkDither">Enable Dithering:</label><input type="checkbox" id="checkDither" checked oninput="updateConfig()"></div>
 <div class="opt-row"><label for="bgColor">Background Color:</label><input type="color" id="bgColor" value="#000000" oninput="updateConfig()"></div>
@@ -112,8 +114,15 @@ function checkClamp(e){let s=e.previousElementSibling;if(s&&s.type==='range'){le
 <details><summary>Orientation</summary>
 <div class="opt-group">
 <div class="opt-grid"><div class="opt-row"><span>Type:</span><select id="orientType" oninput="updateConfig()"><option value="wall">Wall (Vertical)</option><option value="floor">Floor (Horizontal)</option><option value="thumb">Diagonal (Custom GM Thumbnails)</option></select></div><div class="opt-row" id="faceDirOpts"><span>Facing:</span><select id="orientFace" oninput="updateConfig()"><option value="n">North (-Z)</option><option value="e">East (+X)</option><option value="s">South (+Z)</option><option value="w">West (-X)</option></select></div></div>
-<div class="opt-grid"><div class="opt-row"><label>Mirror H:</label><input type="checkbox" id="orientMirH" oninput="updateConfig()"></div><div class="opt-row"><label>Mirror V:</label><input type="checkbox" id="orientMirV" oninput="updateConfig()"></div></div>
+<div class="opt-grid"><div class="opt-row"><label>Mirror Horizontally:</label><input type="checkbox" id="orientMirH" oninput="updateConfig()"></div><div class="opt-row"><label>Mirror Vertically:</label><input type="checkbox" id="orientMirV" oninput="updateConfig()"></div></div>
 <canvas id="orientCanvas" width="400" height="300"></canvas><div style="text-align:center;color:#fa3;font-size:0.8em">Drag to Rotate | Scroll to Zoom | Red:X Green:Y Blue:Z</div>
+
+<div class="opt-group" id="thumbpos" style="display:none">
+<div class="opt-label">Min Schematic Position (x, y, z)</div><div class="opt-row"><span>X:</span><input type="number" id="minX" value="0"><span>Y:</span><input type="number" id="minY" value="0"><span>Z:</span><input type="number" id="minZ" value="0"></div>
+<div class="opt-label">Max Schematic Position (x, y, z)</div><div class="opt-row"><span>X:</span><input type="number" id="maxX" value="0"><span>Y:</span><input type="number" id="maxY" value="0"><span>Z:</span><input type="number" id="maxZ" value="0"></div>
+<button style="margin: 0 auto" onclick="adjustSettings()">Use recommended settings</button>
+</div>
+
 </div></details>
 <details><summary>More Options</summary>
 <div class="opt-label">Adjust</div>
@@ -134,12 +143,12 @@ function checkClamp(e){let s=e.previousElementSibling;if(s&&s.type==='range'){le
 <div class="opt-group">
 <textarea id="txt_val" placeholder="Enter text here..." oninput="updateConfig(500)" rows="3"></textarea>
 <div class="opt-row"><span>Font:</span><select id="txt_font" oninput="updateConfig()"><option value="'Courier New', monospace">Monospace</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Times New Roman">Times New Roman</option><option value="Impact">Impact</option><option value="Comic Sans MS">Comic Sans</option></select></div>
-<div class="opt-row"><span>Align:</span><select id="txt_align" oninput="updateConfig()"><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></div>
-<div class="opt-row"><span>Color:</span><input type="color" id="txt_color" value="#ffffff" oninput="updateConfig()"></div>
-<div class="opt-row"><label>Bypass Dithering:</label><input type="checkbox" id="txt_bypass" oninput="updateConfig()"></div>
-<div class="opt-row"><span>X Pos:</span><input type="range" min="0" max="100" value="50" id="txt_x" oninput="sync(this,0)"><input type="number" value="50" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
-<div class="opt-row"><span>Y Pos:</span><input type="range" min="0" max="100" value="50" id="txt_y" oninput="sync(this,0)"><input type="number" value="50" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
-<div class="opt-row"><span>Size:</span><input type="range" min="10" max="200" value="40" id="txt_s" oninput="sync(this,0)"><input type="number" value="40" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
+<div class="opt-row"><span>Text Align:</span><select id="txt_align" oninput="updateConfig()"><option value="left">Left</option><option value="center" selected>Center</option><option value="right">Right</option></select></div>
+<div class="opt-row"><span>Text Color:</span><input type="color" id="txt_color" value="#ffffff" oninput="updateConfig()"></div>
+<div class="opt-row"><label>Text Bypass Dithering:</label><input type="checkbox" id="txt_bypass" oninput="updateConfig()"></div>
+<div class="opt-row"><span>Text Horizontal Position:</span><input type="range" min="0" max="100" value="50" id="txt_x" oninput="sync(this,0)"><input type="number" value="50" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
+<div class="opt-row"><span>Text Vertical Position:</span><input type="range" min="0" max="100" value="50" id="txt_y" oninput="sync(this,0)"><input type="number" value="50" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
+<div class="opt-row"><span>Text Size:</span><input type="range" min="10" max="200" value="40" id="txt_s" oninput="sync(this,0)"><input type="number" value="40" oninput="sync(this,1)" onblur="checkClamp(this)"></div>
 </div></details>
 </div>
 <h2>Get Output</h2>
@@ -191,33 +200,21 @@ function checkClamp(e){let s=e.previousElementSibling;if(s&&s.type==='range'){le
 </ul>
 <h2>Instructions for Thumbnail</h2>
 <ul>
-<li>These instructions probably won't work as reliably for games that use //exportworld unless you can guarantee the maximum (x,y,z) coordinates</li>
+<li>These instructions may not work as reliably for games that use //exportworld unless you can guarantee the maximum (x,y,z) coordinates</li>
 <li>Choose an image or paste one here</li>
-<li>Select how big the thumbnail should be</li>
-<li>Select the "Diagonal (Custom GM Thumbnails)" option under "Type" under "Orientation"</li>
-<li>Click "Copy As World Code"</li>
-<li>Important: Make a new flat world and paste world code there. DO NOT do this in your actual live world or game yet</li>
-<li>Type "/gm c" in chat (without quotes)</li>
-<li>Type "//wand" in chat (without quotes)</li>
-<li>Wait for the image to finish loading</li>
-<li>Select the two corners of the image. These will be two bedrocks, one at the far front of the image, one at the far back. These are just the minimum and maximum (x, y, z)</li>
-<li>Do not delete the bedrocks. Type "//copy" in chat (without quotes)</li>
-<li>Type "//schematic save" in chat (without quotes) to save the image as a schematic</li>
-<li>Join the custom game world where you want the image to be</li>
-<li>Now firstly, if you have not already, save a backup of the current schematic by selecting opposite corners and using //schematic save, just in case something goes wrong</li>
-<li>Move REALLY far away from any structures you have built. For example, if you're at (0,0,0), go to (50000,10000,50000), just to be safe. Also make sure you're far from the ground or bedrock</li>
-<li>Type "//schematic load" in chat (without quotes) and select the schematic you just saved</li>
-<li>Type "//paste" in chat (without quotes)</li>
-<li>Type "//wand" in chat (without quotes)</li>
-<li>Select the two corners of the image with the wand, which are the two bedrocks from before</li>
-<li>Stand on the back corner-bedrock (the one that is lower than the other) then don't move</li>
-<li>Type "//copy" in chat (without quotes)</li>
-<li>Go to the maximum (x,y,z) corner of your custom gamemode. This is one of the corners on the top, with the highest x coordinate and z coordinate. Note: -10 is considered higher than -20, and 20 is considered higher than 10.</li>
-<li>Type "//paste" in chat (without quotes)</li>
-<li>Your image has been successfully pasted</li>
-<li>Now, each time you have to save your gamemode, you must select the front bedrock (the one with the highest (x,y,z)), and your lowest (x,y,z) coordinates, with a wand, then type //copy then type //schematic save.</li>
-<li>If you ever need to change the thumbnail, just select the two corner-bedrocks of the image, then type //clear, then follow the above steps to set a new thumbnail</li>
-<li>Another thing you may consider doing is building your game at the back of the image, by having the image first.</li>
+<li>Open up the orientation section (by clicking on it)</li>
+<li>Select "Diagonal (Custom GM Thumbnails)" option under "Type"</li>
+<li>Enter the minimum and maximum positions for your schematic (i.e. the two corners you'd use to select it)</li>
+<li>Click "Use Recommended Settings"</li>
+<li>If you want a slightly bigger thumbnail, increase the size with the slider, but DO NOT decrease it below what is recommended, or your main schematic may get cutoff</li>
+<li>Open up your MAIN custom world, not just a test world (unless you want to test it first)</li>
+<li>Copy the current world code and save it somewhere safe (e.g. a group chat or document)</li>
+<li>Delete the current world code (make sure you have it saved somewhere)</li>
+<li>Copy all world codes and paste them into bloxd's world code one by one (or just once if there is only one world code). When the next one comes, delete the previous one</li>
+<li>Put back in your old world code that you saved</li>
+<li>If you are using //exportworld, leave the world, and rejoin, then make sure all the image is fully loaded (go near all the chunks to load them), then export your world using //exportworld</li>
+<li>If you are using //schematic save, select your minimum (x,y,z) corner, and the maximum (x,y,z) corner of the image (there should be a bedrock far in the air to mark it), then type //schematic save. Note, this may not work if you have over 200 chunks</li>
+<li>Congratulations, you now have a thumbnail!</li>
 </ul>
 <h2>How to use world builder in bloxd.io</h2>
 <ul>
@@ -253,7 +250,7 @@ oCanvas.addEventListener('mousedown',e=>{isDrag=true;lastX=e.clientX;lastY=e.cli
 oCanvas.addEventListener('wheel',e=>{e.preventDefault();camDist=Math.max(1,Math.min(1000,camDist+e.deltaY*0.5));renderOrientation()})
 window.addEventListener('mousemove',e=>{if(isDrag){let dx=e.clientX-lastX,dy=e.clientY-lastY;camYaw+=dx*0.5;camPitch=Math.max(-90,Math.min(90,camPitch-dy*0.5));lastX=e.clientX;lastY=e.clientY;renderOrientation()}})
 window.addEventListener('mouseup',()=>isDrag=false)
-function updateConfig(d=40){if(loadedImage){POS_X=document.getElementById('inX').value;POS_Y=document.getElementById('inY').value;POS_Z=document.getElementById('inZ').value;activeRenderJob++;let thisJob=activeRenderJob;let t=parseInt(document.getElementById('resNum').value)||96;if(debounceTimer)clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>{processImageAsync(loadedImage,t,thisJob)},d)};thumbnailMode=document.getElementById("orientType").value==='thumb';document.getElementById('faceDirOpts').style.display=thumbnailMode?'none':'flex';document.getElementById("orientCanvas").style.display=thumbnailMode?'none':'inline'}
+function updateConfig(d=40){if(loadedImage){POS_X=document.getElementById('inX').value;POS_Y=document.getElementById('inY').value;POS_Z=document.getElementById('inZ').value;activeRenderJob++;let thisJob=activeRenderJob;let t=parseInt(document.getElementById('resNum').value)||96;if(debounceTimer)clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>{processImageAsync(loadedImage,t,thisJob)},d)};thumbnailMode=document.getElementById("orientType").value==='thumb';document.getElementById('faceDirOpts').style.display=thumbnailMode?'none':'flex';document.getElementById("orientCanvas").style.display=thumbnailMode?'none':'inline';document.getElementById("thumbpos").style.display=thumbnailMode?'flex':'none'}
 function renderOrientation(){let hz=150+(camPitch*2.5);oCtx.fillStyle="#cef3ff";oCtx.fillRect(0,0,400,hz);oCtx.fillStyle="#67a24d";oCtx.fillRect(0,hz,400,300-hz);let cx=200,cy=150,rY=camYaw*Math.PI/180,rP=camPitch*Math.PI/180,cY=Math.cos(rY),sY=Math.sin(rY),cP=Math.cos(rP),sP=Math.sin(rP);let proj=(x,y,z)=>{let x1=x*cY-z*sY,z1=x*sY+z*cY,y2=y*cP-z1*sP,z2=y*sP+z1*cP,s=400/(400+z2+camDist);return{x:cx+x1*s,y:cy-y2*s,z:z2}};let dL=[];let addL=(p1,p2,c)=>{let a=proj(p1[0],p1[1],p1[2]),b=proj(p2[0],p2[1],p2[2]);dL.push({t:'l',p1:a,p2:b,c:c,z:(a.z+b.z)/2})};addL([0,0,0],[65,0,0],"#f00");addL([0,0,0],[0,100,0],"#0f0");addL([0,0,0],[0,0,65],"#00f");let [U,V]=getVectors();let txtA=(txt,pos,c)=>{let p=proj(pos[0],pos[1],pos[2]);dL.push({t:'t',p:p,txt:txt,c:c,z:p.z})};txtA("+X",[70,0,0],"#f00");txtA("+Y",[0,105,0],"#0f0");txtA("+Z",[0,0,70],"#00f");if(miniData){let mw=miniData.w,mh=miniData.h,px=miniData.d,m=document.getElementById('orientType').value,sc=45/Math.max(mw,mh),ox=0,oy=0,oz=0;if(U[0]<0)ox+=mw*sc;if(U[1]<0)oy+=mw*sc;if(U[2]<0)oz+=mw*sc;if(V[0]<0)ox+=mh*sc;if(V[1]<0)oy+=mh*sc;if(V[2]<0)oz+=mh*sc;let yMult=1;for(let y=0;y<mh;y++){for(let x=0;x<mw;x++){let i=(y*mw+x)*4,r=px[i],g=px[i+1],b=px[i+2],a=px[i+3];if(a<50)continue;let rx=1+ox+x*U[0]*sc+y*V[0]*sc*yMult,ry=1+oy+x*U[1]*sc+y*V[1]*sc*yMult,rz=1+oz+x*U[2]*sc+y*V[2]*sc*yMult;let p0=proj(rx,ry,rz),p1=proj(rx+(U[0]+V[0])*sc,ry+(U[1]+V[1])*sc*yMult,rz+(U[2]+V[2])*sc);let pA=proj(rx+U[0]*sc,ry+U[1]*sc*yMult,rz+U[2]*sc),pB=proj(rx+V[0]*sc,ry+V[1]*sc*yMult,rz+V[2]*sc);dL.push({t:'q',pts:[p0,pA,p1,pB],c:`rgb(${r},${g},${b})`,bc:`rgba(${r},${g},${b},0.5)`,z:(p0.z+p1.z)/2})}}let txt=(txt,pos)=>{let p=proj(1+ox+pos[0]*sc,1+oy+pos[1]*sc*yMult,1+oz+pos[2]*sc);dL.push({t:'t',p:p,txt:txt,c:"#fff",z:-99999})};txt("T",[U[0]*mw*0.5,U[1]*mw*0.5,U[2]*mw*0.5]);txt("B",[U[0]*mw*0.5+V[0]*mh,U[1]*mw*0.5+V[1]*mh,U[2]*mw*0.5+V[2]*mh]);txt("L",[V[0]*mh*0.5,V[1]*mh*0.5,V[2]*mh*0.5]);txt("R",[U[0]*mw+V[0]*mh*0.5,U[1]*mw+V[1]*mh*0.5,U[2]*mw+V[2]*mh*0.5])}dL.sort((a,b)=>b.z-a.z);dL.forEach(o=>{if(o.t==='l'){oCtx.strokeStyle=o.c;oCtx.lineWidth=2;oCtx.beginPath();oCtx.moveTo(o.p1.x,o.p1.y);oCtx.lineTo(o.p2.x,o.p2.y);oCtx.stroke()}if(o.t==='q'){oCtx.fillStyle=o.c;oCtx.strokeStyle=o.bc;oCtx.beginPath();oCtx.moveTo(o.pts[0].x,o.pts[0].y);for(let i=1;i<4;i++)oCtx.lineTo(o.pts[i].x,o.pts[i].y);oCtx.closePath();oCtx.fill();oCtx.stroke()}if(o.t==='t'){oCtx.fillStyle=o.c;oCtx.font="14px monospace";oCtx.fillText(o.txt,o.p.x-4,o.p.y+4)}})}
 async function processImageAsync(img,finalRes,jobId){let steps=[];if(finalRes>90)steps.push(90);if(finalRes>120)steps.push(120);steps.push(finalRes);for(let stepRes of steps){if(activeRenderJob!==jobId)return;await renderPass(img,stepRes,(stepRes===finalRes));await new Promise(r=>requestAnimationFrame(r))}}
 function renderPass(img,overrideRes,isFinal){return new Promise((resolve)=>{
@@ -261,10 +258,41 @@ MAX_RES=overrideRes;CROP_T=parseFloat(document.getElementById('cropT').value);CR
 document.getElementById("finalsize").innerHTML=`<strong>Final size:</strong><br>Horizontal: ${canvas.width}<br>Vertical: ${canvas.height}`
 resolve()
 })}
+let bestCrop = [0,0,0,0]
 function resetCrop(){let t=(i,v)=>{let e=document.getElementById(i);e.value=v;e.nextElementSibling.value=v};let ar=loadedImage.naturalWidth/loadedImage.naturalHeight;if(ar>=1){let o=(100-(100/ar))/2;t('cropT',o);t('cropB',o);t('cropL',0);t('cropR',0)}else{let o=(100-(100*ar))/2;t('cropL',o);t('cropR',o);t('cropT',0);t('cropB',0)}}
 document.getElementById("imgUpload").addEventListener("change",e=>{let f=e.target.files;if(f.length){let r=new FileReader();r.onload=(ev)=>{let i=new Image();i.onload=()=>{loadedImage=i;resetCrop();updateConfig()};i.src=ev.target.result};r.readAsDataURL(f[0])}})
 document.addEventListener('paste',e=>{e.preventDefault();let it=(e.clipboardData||e.originalEvent.clipboardData).items;for(let i of it){if(i.type.includes('image')){let f=i.getAsFile(),d=new DataTransfer();d.items.add(f);document.getElementById('imgUpload').files=d.files;document.getElementById('imgUpload').dispatchEvent(new Event('change',{bubbles:true}));break}}})
 updateConfig()
+function adjustSettings() {
+    if(!loadedImage) return
+    let minPos = ["minX","minY","minZ"].map(name=>+document.getElementById(name).value)
+    let maxPos = ["maxX","maxY","maxZ"].map(name=>+document.getElementById(name).value)
+    let size = []
+    let loadPos = []
+    for (let i = 0; i < 3; i++) {
+        if(minPos[i]>maxPos[i]){
+            let t = minPos[i]
+            minPos[i] = maxPos[i]
+            maxPos[i] = t
+        }
+        size[i] = maxPos[i] - minPos[i]
+        loadPos[i] = minPos[i]-2
+    }
+    let totalSize = size[0]+size[1]+size[2]
+    let maxSize = Math.min(96,totalSize/2+4)
+    let cropTB = 16.666666666666668
+    let cropLR = 0
+    let update=(i,v)=>{let e=document.getElementById(i);e.value=v;e.nextElementSibling.value=v}
+    document.getElementById("inX").value = loadPos[0]
+    document.getElementById("inY").value = loadPos[1]
+    document.getElementById("inZ").value = loadPos[2]
+    update("cropT",cropTB)
+    update("cropB",cropTB)
+    update("cropL",cropLR)
+    update("cropR",cropLR)
+    update("resSlider",maxSize)
+    updateConfig()
+}
 </script>
 </body>
 </html>
