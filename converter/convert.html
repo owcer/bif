@@ -279,7 +279,7 @@ function adjustSettings() {
         loadPos[i] = minPos[i]-2
     }
     let totalSize = size[0]+size[1]+size[2]
-    let maxSize = Math.max(96,totalSize/2+4,size[0]+size[2]+4)
+    let maxSize = Math.max(96,totalSize/2+4,size[0]/2+size[2]/2+4)>>>0
     let cropTB = 16.666666666666668
     let cropLR = 0
     let update=(i,v)=>{let e=document.getElementById(i);e.value=v;e.nextElementSibling.value=v}
